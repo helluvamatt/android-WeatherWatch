@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WristWeather</string>
+    <string name="prefs_cat_weather_title">Weather</string>
+    <string name="prefs_apikey_key" translatable="false">weather.owmapikey</string>
+    <string name="prefs_apikey_title">API Key</string>
+    <string name="prefs_apikey_summary">Not Set</string>
+    <string name="prefs_tempunit_key" translatable="false">weather.tempunit</string>
+    <string name="prefs_tempunit_title">Temperature Units</string>
+
+    <string-array name="prefs_tempunit_displayValues">
+        <item>Kelvin</item>
+        <item>Celsius</item>
+        <item>Fahrenheit</item>
+    </string-array>
+
+    <integer-array name="prefs_tempunit_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
+    <string name="prefs_updatefreq_key" translatable="false">weather.updatefreq</string>
+    <string name="prefs_updatefreq_title">Weather Update Period</string>
+
+    <string-array name="prefs_updatefreq_displayValues">
+        <item>5 minutes</item>
+        <item>10 minutes</item>
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 hour</item>
+    </string-array>
+
+    <integer-array name="prefs_updatefreq_values">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </integer-array>
+    
+    <string name="prefs_locationsource_key" translatable="false">weather.locationsource</string>
+    <string name="prefs_locationsource_title">Location Source</string>
+    
+    <string-array name="prefs_locationsource_displayValues">
+        <item>Auto</item>
+        <item>Network</item>
+        <item>GPS</item>
+    </string-array>
+    
+    <integer-array name="prefs_locationsource_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
+    <string name="str_degrees_k">%.0f °K</string>
+    <string name="str_degrees_c">%.0f °C</string>
+    <string name="str_degrees_f">%.0f °F</string>
+    <string name="str_weather_api_url">http://api.openweathermap.org/data/2.5/weather</string>
+    <string name="str_weather_api_iconurl">http://openweathermap.org/img/w/%s.png</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_weather">Current Conditions</string>
+    <string name="action_forecast">Forecast</string>
+    <string name="action_settings">Settings</string>
+
+</resources>

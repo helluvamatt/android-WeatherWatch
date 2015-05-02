@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AppTheme" parent="Theme.AppThemeBase">
+        <!-- Platform specific for API 21 or later -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+		<item name="android:windowTranslucentStatus">true</item>
+    </style>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AppTheme" parent="Theme.AppThemeBase">
+        <!-- Platform specific for platforms before API 21 -->
+    </style> 
+    
+    <style name="Theme.AppThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Non-platform-specific themes/styles -->
+		<item name="colorPrimary">@color/primary</item>
+		<item name="colorPrimaryDark">@color/primary_dark</item>
+		<!-- TODO Should there be more here? -->
+	</style>
+</resources>
