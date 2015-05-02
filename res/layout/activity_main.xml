@@ -6,7 +6,7 @@
 	android:layout_height="match_parent"
 	android:layout_width="match_parent"
 	android:fitsSystemWindows="true"
-	tools:context="com.schneenet.android.wristweather.MainActivity">
+	tools:context="com.schneenet.android.weatherwatch.MainActivity">
 
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -32,7 +32,7 @@
 		android:layout_gravity="start"
 		android:layout_height="match_parent"
 		android:layout_width="@dimen/navigation_drawer_width"
-		android:name="com.schneenet.android.wristweather.NavigationDrawerFragment"
+		android:name="com.schneenet.android.weatherwatch.NavigationDrawerFragment"
 		tools:layout="@layout/fragment_navigation_drawer" />
 
 </android.support.v4.widget.DrawerLayout>

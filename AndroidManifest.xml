@@ -3,7 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:versionCode="1"
 	android:versionName="1.0"
-	package="com.schneenet.android.wristweather">
+	package="com.schneenet.android.weatherwatch">
 
 	<uses-sdk
 		android:minSdkVersion="19"

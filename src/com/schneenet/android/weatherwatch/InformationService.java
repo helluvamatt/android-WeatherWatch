@@ -1,4 +1,4 @@
-package com.schneenet.android.wristweather;
+package com.schneenet.android.weatherwatch;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import com.getpebble.android.kit.util.PebbleDictionary;
 public class InformationService extends Service implements OnSharedPreferenceChangeListener
 {
 
-	public static final String ACTION_RECONFIGURE = "com.schneenet.android.wristweather.InformationService.ACTION_RECONFIGURE";
+	public static final String ACTION_RECONFIGURE = "com.schneenet.android.weatherwatch.InformationService.ACTION_RECONFIGURE";
 
 	private final static UUID PEBBLE_APP_UUID = UUID.fromString("455367bd-36cc-4f1d-8002-ff84b2356582");
 

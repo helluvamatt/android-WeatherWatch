@@ -1,4 +1,4 @@
-package com.schneenet.android.wristweather;
+package com.schneenet.android.weatherwatch;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

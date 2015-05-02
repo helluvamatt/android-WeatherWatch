@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">WristWeather</string>
+    <string name="app_name">WeatherWatch</string>
     <string name="prefs_cat_weather_title">Weather</string>
     <string name="prefs_apikey_key" translatable="false">weather.owmapikey</string>
     <string name="prefs_apikey_title">API Key</string>
