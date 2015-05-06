@@ -20,19 +20,12 @@
 			android:minHeight="?attr/actionBarSize"
 			android:background="?attr/colorPrimary" />
 
-		<FrameLayout
-			android:id="@+id/container"
-			android:layout_height="wrap_content"
-			android:layout_width="match_parent" />
+        <android.support.v4.view.ViewPager
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:id="@+id/fragment_pager"
+            android:layout_weight="1" />
 
 	</LinearLayout>
-
-	<fragment
-		android:id="@+id/navigation_drawer"
-		android:layout_gravity="start"
-		android:layout_height="match_parent"
-		android:layout_width="@dimen/navigation_drawer_width"
-		android:name="com.schneenet.android.weatherwatch.NavigationDrawerFragment"
-		tools:layout="@layout/fragment_navigation_drawer" />
 
 </android.support.v4.widget.DrawerLayout>

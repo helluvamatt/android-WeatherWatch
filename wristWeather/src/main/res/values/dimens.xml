@@ -10,4 +10,9 @@
     -->
     <dimen name="navigation_drawer_width">240dp</dimen>
 
+    <dimen name="card_padding">4dp</dimen>
+    <dimen name="card_height">360dp</dimen>
+    <dimen name="weather_temperature_textSize">64sp</dimen>
+    <dimen name="default_icon_size">128dp</dimen>
+
 </resources>

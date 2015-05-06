@@ -1,29 +1,29 @@
 package com.schneenet.android.weatherwatch;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.AdapterView;
 
-public class MainActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
+import com.mikepenz.iconics.typeface.FontAwesome;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.Nameable;
+
+public class MainActivity extends AppCompatActivity implements Drawer.OnDrawerItemClickListener
 {
+	private Toolbar mToolbar;
+	private Drawer.Result mDrawerResult;
 
-	/**
-	 * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-	 */
-	private NavigationDrawerFragment mNavigationDrawerFragment;
-
-	/**
-	 * Used to store the last screen title. For use in {@link #restoreActionBar()}.
-	 */
-	private CharSequence mTitle;
+	private ViewPager mPager;
+	private FragmentAdapter mFragmentAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -31,101 +31,64 @@ public class MainActivity extends AppCompatActivity implements NavigationDrawerF
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-	    setSupportActionBar(toolbar);
-		
-		mNavigationDrawerFragment = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
-		mTitle = getTitle();
+		mPager = (ViewPager) findViewById(R.id.fragment_pager);
+		mToolbar = (Toolbar) findViewById(R.id.main_toolbar);
+		setSupportActionBar(mToolbar);
 
-		// Set up the drawer.
-		mNavigationDrawerFragment.setUp(R.id.navigation_drawer, (DrawerLayout) findViewById(R.id.drawer_layout));
+		mFragmentAdapter = new FragmentAdapter(getFragmentManager());
+		mFragmentAdapter.getFragmentList().add(WeatherFragment.newInstance(WeatherFragment.MODE_TODAY));
+		mFragmentAdapter.getFragmentList().add(WeatherFragment.newInstance(WeatherFragment.MODE_FORECAST));
+		mFragmentAdapter.getFragmentList().add(SettingsFragment.newInstance());
+		mPager.setAdapter(mFragmentAdapter);
+
+		mDrawerResult = new Drawer()
+				.withActivity(this)
+				.withToolbar(mToolbar)
+				.addDrawerItems(
+						new PrimaryDrawerItem().withName(R.string.action_weather).withIdentifier(R.id.action_weather).withIcon(FontAwesome.Icon.faw_sun_o),
+						new PrimaryDrawerItem().withName(R.string.action_forecast).withIdentifier(R.id.action_forecast).withIcon(FontAwesome.Icon.faw_bolt),
+						new DividerDrawerItem(),
+						new PrimaryDrawerItem().withName(R.string.action_settings).withIdentifier(R.id.action_settings).withIcon(GoogleMaterial.Icon.gmd_settings)
+				)
+				.withOnDrawerItemClickListener(this)
+				.withSavedInstance(savedInstanceState)
+				.withFireOnInitialOnClick(true)
+				.build();
+
+		Intent serviceIntent = new Intent(this, InformationService.class);
+		startService(serviceIntent);
 	}
 
 	@Override
-	public void onNavigationDrawerItemSelected(int position)
+	protected void onSaveInstanceState(Bundle outState)
 	{
-		// update the main content by replacing fragments
-		Fragment fragment = null;
-		switch (position)
-		{
-			case 2:
-				fragment = new SettingsFragment();
-				break;
-			case 1:
-				fragment = PlaceholderFragment.newInstance(2);
-				break;
-			case 0:
-			default:
-				fragment = PlaceholderFragment.newInstance(1);
-				break;
-		}
-		
-		FragmentManager fragmentManager = getFragmentManager();
-		fragmentManager.beginTransaction().replace(R.id.container, fragment).commit();
+		mDrawerResult.saveInstanceState(outState);
 	}
 
-	public void onSectionAttached(int number)
+	@Override
+	public void onItemClick(AdapterView<?> adapterView, View view, int i, long l, IDrawerItem drawerItem)
 	{
-		switch (number)
+		if (drawerItem != null)
 		{
-		case 1:
-			mTitle = getString(R.string.action_weather);
-			break;
-		case 2:
-			mTitle = getString(R.string.action_forecast);
-			break;
-		case 3:
-			mTitle = getString(R.string.action_settings);
-			break;
+			if (drawerItem instanceof Nameable)
+			{
+				mToolbar.setTitle(((Nameable) drawerItem).getNameRes());
+			}
+
+			// update the main content by replacing fragments
+			switch (drawerItem.getIdentifier())
+			{
+				case R.id.action_settings:
+					mPager.setCurrentItem(2);
+					break;
+				case R.id.action_forecast:
+					mPager.setCurrentItem(1);
+					break;
+				case R.id.action_weather:
+				default:
+					mPager.setCurrentItem(0);
+					break;
+			}
 		}
 	}
-
-	public void restoreActionBar()
-	{
-		ActionBar actionBar = getSupportActionBar();
-		actionBar.setDisplayShowTitleEnabled(true);
-		actionBar.setTitle(mTitle);
-	}
-
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class PlaceholderFragment extends Fragment
-	{
-		/**
-		 * The fragment argument representing the section number for this fragment.
-		 */
-		private static final String ARG_SECTION_NUMBER = "section_number";
-
-		/**
-		 * Returns a new instance of this fragment for the given section number.
-		 */
-		public static PlaceholderFragment newInstance(int sectionNumber)
-		{
-			PlaceholderFragment fragment = new PlaceholderFragment();
-			Bundle args = new Bundle();
-			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-			fragment.setArguments(args);
-			return fragment;
-		}
-
-		public PlaceholderFragment()
-		{
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-		{
-			View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-			return rootView;
-		}
-
-		@Override
-		public void onAttach(Activity activity)
-		{
-			super.onAttach(activity);
-			((MainActivity) activity).onSectionAttached(getArguments().getInt(ARG_SECTION_NUMBER));
-		}
-	}
-
 }

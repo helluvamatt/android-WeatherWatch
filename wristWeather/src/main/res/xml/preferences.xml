@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="@string/prefs_cat_weather_title">
-        <ListPreference android:dialogTitle="@string/prefs_updatefreq_title" android:entries="@array/prefs_updatefreq_displayValues" android:entryValues="@array/prefs_updatefreq_values" android:title="@string/prefs_updatefreq_title" android:key="@string/prefs_updatefreq_key"/>
-        <ListPreference android:dialogTitle="@string/prefs_updatefreq_title" android:entries="@array/prefs_updatefreq_displayValues" android:entryValues="@array/prefs_updatefreq_values" android:title="@string/prefs_tempunit_title" android:key="@string/prefs_tempunit_key"/>
-        <EditTextPreference android:key="@string/prefs_apikey_key" android:title="@string/prefs_apikey_title" android:summary="@string/prefs_apikey_summary" android:dialogTitle="@string/prefs_apikey_title"/>
-        
-        
+        <ListPreference
+            android:dialogTitle="@string/prefs_updatefreq_title"
+            android:entries="@array/prefs_updatefreq_displayValues"
+            android:entryValues="@array/prefs_updatefreq_values"
+            android:title="@string/prefs_updatefreq_title"
+            android:key="@string/prefs_updatefreq_key"/>
+        <ListPreference
+            android:dialogTitle="@string/prefs_tempunit_title"
+            android:entries="@array/prefs_tempunit_displayValues"
+            android:entryValues="@array/prefs_tempunit_values"
+            android:title="@string/prefs_tempunit_title"
+            android:key="@string/prefs_tempunit_key"/>
+        <EditTextPreference
+            android:key="@string/prefs_apikey_key"
+            android:title="@string/prefs_apikey_title"
+            android:summary="@string/prefs_default_summary"
+            android:dialogTitle="@string/prefs_apikey_title"/>
+        <ListPreference
+            android:key="@string/prefs_locationsource_key"
+            android:title="@string/prefs_locationsource_title"
+            android:entries="@array/prefs_locationsource_displayValues"
+            android:entryValues="@array/prefs_locationsource_values"
+            android:dialogTitle="@string/prefs_locationsource_title"/>
     </PreferenceCategory>
 </PreferenceScreen>

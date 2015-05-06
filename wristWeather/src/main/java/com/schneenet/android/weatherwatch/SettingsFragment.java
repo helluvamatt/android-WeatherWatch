@@ -11,6 +11,11 @@ import android.preference.PreferenceFragment;
 
 public class SettingsFragment extends PreferenceFragment
 {
+	public static SettingsFragment newInstance()
+	{
+		return new SettingsFragment();
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -31,6 +36,10 @@ public class SettingsFragment extends PreferenceFragment
 		{
 			prefApiKey.setSummary(prefApiKey.getText());
 		}
+
+		ListPreference prefLocationSource = (ListPreference) findPreference(getString(R.string.prefs_locationsource_key));
+		prefLocationSource.setOnPreferenceChangeListener(mSummaryValuePreferenceChangeListener);
+		prefLocationSource.setSummary(prefLocationSource.getEntry());
 	}
 	
 	private OnPreferenceChangeListener mSummaryValuePreferenceChangeListener = new OnPreferenceChangeListener()
@@ -41,20 +50,19 @@ public class SettingsFragment extends PreferenceFragment
 			if (preference instanceof ListPreference)
 			{
 				ListPreference lp = (ListPreference) preference;
-				int selectedIndex = Arrays.asList(lp.getEntryValues()).indexOf(lp.getValue());
-				if (selectedIndex > -1)
+				int newValueIndex = Arrays.asList(lp.getEntryValues()).indexOf(newValue);
+				if (newValueIndex > -1)
 				{
-					lp.setSummary(lp.getEntries()[selectedIndex]);
+					lp.setSummary(lp.getEntries()[newValueIndex]);
 				}
 				else
 				{
-					lp.setSummary("");
+					lp.setSummary(getString(R.string.prefs_default_summary));
 				}
-			}
-			else if (preference instanceof EditTextPreference)
+			} else if (preference instanceof EditTextPreference)
 			{
 				EditTextPreference etp = (EditTextPreference) preference;
-				etp.setSummary(etp.getText());
+				etp.setSummary(newValue.toString());
 			}
 			return true;
 		}
