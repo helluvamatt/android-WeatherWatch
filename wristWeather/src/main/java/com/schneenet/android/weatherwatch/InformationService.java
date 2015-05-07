@@ -19,7 +19,6 @@ import android.util.Log;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver;
 import com.getpebble.android.kit.util.PebbleDictionary;
-import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.meteocons_typeface_library.Meteoconcs;
 import com.schneenet.android.weatherwatch.utils.WeatherUtils;
 
@@ -48,6 +47,15 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	private static final int PREF_TEMPUNIT_C = 1;
 	private static final int PREF_TEMPUNIT_F = 2;
 
+	private static final int PREF_SPEEDUNIT_MPH = 0;
+	private static final int PREF_SPEEDUNIT_KPH = 1;
+	private static final int PREF_SPEEDUNIT_KNOTS = 2;
+	private static final int PREF_SPEEDUNIT_MPS = 3;
+
+	private static final int PREF_PRESSUREUNIT_INHG = 0;
+	private static final int PREF_PRESSUREUNIT_MMHG = 1;
+	private static final int PREF_PRESSUREUNIT_HPA = 2;
+
 	private static final int PREF_LOCATIONSOURCE_AUTO = 0;
 	//private static final int PREF_LOCATIONSOURCE_NETWORK = 1;
 	private static final int PREF_LOCATIONSOURCE_GPS = 2;
@@ -66,6 +74,8 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	// Configuration
 	private long mDelay = 30; // minutes
 	private int mTempUnit = PREF_TEMPUNIT_F; // Default to degrees F
+	private int mWindSpeedUnit = PREF_SPEEDUNIT_MPH; // Default to MPH
+	private int mPressureUnit = PREF_PRESSUREUNIT_INHG; // Default to in Hg (US)
 	private String mApiKey = "";
 	private byte mForecastDays = 10; // TODO Configuration for this
 
@@ -522,6 +532,54 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		return temperature;
 	}
 
+	public static String getWindSpeedString(Context ctxt, int windSpeedUnit, float rawWindSpeed)
+	{
+		String windSpeed;
+		switch (windSpeedUnit)
+		{
+			case PREF_SPEEDUNIT_MPS:
+				windSpeed = ctxt.getString(R.string.str_windspeed_mps, rawWindSpeed);
+				break;
+			case PREF_SPEEDUNIT_KPH:
+				windSpeed = ctxt.getString(R.string.str_windspeed_kph, WeatherUtils.speedMpsToKph(rawWindSpeed));
+				break;
+			case PREF_SPEEDUNIT_KNOTS:
+				windSpeed = ctxt.getString(R.string.str_windspeed_knots, WeatherUtils.speedMpsToKnots(rawWindSpeed));
+				break;
+			case PREF_SPEEDUNIT_MPH:
+			default:
+				windSpeed = ctxt.getString(R.string.str_windspeed_mph, WeatherUtils.speedMpsToMph(rawWindSpeed));
+				break;
+		}
+		return windSpeed;
+	}
+
+	public static String getPressureString(Context ctxt, int pressureUnit, float rawPressure)
+	{
+		String pressure;
+		switch (pressureUnit)
+		{
+			case PREF_PRESSUREUNIT_HPA:
+				pressure = ctxt.getString(R.string.str_pressure_hpa, rawPressure);
+				break;
+			case PREF_PRESSUREUNIT_MMHG:
+				pressure = ctxt.getString(R.string.str_pressure_mmhg, WeatherUtils.pressureHpaToMmhg(rawPressure));
+				break;
+			case PREF_PRESSUREUNIT_INHG:
+			default:
+				pressure = ctxt.getString(R.string.str_pressure_inhg, WeatherUtils.pressureHpaToInhg(rawPressure));
+				break;
+		}
+		return pressure;
+	}
+
+	public static String getWindDirectionString(Context context, float degrees)
+	{
+		String[] strings = context.getResources().getStringArray(R.array.str_winddirection);
+		int i = Math.round((degrees - 11.25f) / 22.5f);
+		return strings[i];
+	}
+
 	public class ServiceBinder extends Binder
 	{
 		public void refreshWeather()
@@ -589,6 +647,16 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		public int getTempUnit()
 		{
 			return mTempUnit;
+		}
+
+		public int getWindSpeedUnit()
+		{
+			return mWindSpeedUnit;
+		}
+
+		public int getPressureUnit()
+		{
+			return mPressureUnit;
 		}
 
 		public boolean hasApiKey()

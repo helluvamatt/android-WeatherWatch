@@ -29,6 +29,14 @@ public class SettingsFragment extends PreferenceFragment
 		ListPreference prefTempUnit = (ListPreference) findPreference(getString(R.string.prefs_tempunit_key));
 		prefTempUnit.setOnPreferenceChangeListener(mSummaryValuePreferenceChangeListener);
 		prefTempUnit.setSummary(prefTempUnit.getEntry());
+
+		ListPreference prefSpeedUnit = (ListPreference) findPreference(getString(R.string.prefs_speedunit_key));
+		prefSpeedUnit.setOnPreferenceChangeListener(mSummaryValuePreferenceChangeListener);
+		prefSpeedUnit.setSummary(prefSpeedUnit.getEntry());
+
+		ListPreference prefPressureUnit = (ListPreference) findPreference(getString(R.string.prefs_pressureunit_key));
+		prefPressureUnit.setOnPreferenceChangeListener(mSummaryValuePreferenceChangeListener);
+		prefPressureUnit.setSummary(prefPressureUnit.getEntry());
 		
 		EditTextPreference prefApiKey = (EditTextPreference) findPreference(getString(R.string.prefs_apikey_key));
 		prefApiKey.setOnPreferenceChangeListener(mSummaryValuePreferenceChangeListener);

@@ -11,27 +11,65 @@ import java.util.ArrayList;
  */
 public class FragmentAdapter extends FragmentPagerAdapter
 {
-	private ArrayList<Fragment> mFragmentList = new ArrayList<>();
+	private ArrayList<FragmentHolder> mFragmentList = new ArrayList<>();
 
 	public FragmentAdapter(FragmentManager fm)
 	{
 		super(fm);
 	}
 
-	public ArrayList<Fragment> getFragmentList()
+	public void add(int id, Fragment fragment)
 	{
-		return mFragmentList;
+		mFragmentList.add(new FragmentHolder(id, fragment));
+	}
+
+	public int getPositionFromId(int id)
+	{
+		for (int i = 0; i < mFragmentList.size(); i++)
+		{
+			if (mFragmentList.get(i).identifer == id)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public int getIdAtPosition(int position)
+	{
+		if (exists(position))
+		{
+			return mFragmentList.get(position).identifer;
+		}
+		return -1;
+	}
+
+	public boolean exists(int position)
+	{
+		return position > -1 && position < mFragmentList.size();
 	}
 
 	@Override
 	public Fragment getItem(int position)
 	{
-		return mFragmentList.get(position);
+		return mFragmentList.get(position).fragment;
 	}
 
 	@Override
 	public int getCount()
 	{
 		return mFragmentList.size();
+	}
+
+	private static class FragmentHolder
+	{
+		FragmentHolder(int id, Fragment f)
+		{
+			identifer = id;
+			fragment = f;
+		}
+
+		private int identifer;
+		private Fragment fragment;
 	}
 }

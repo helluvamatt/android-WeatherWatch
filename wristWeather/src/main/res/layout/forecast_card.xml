@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.schneenet.android.weatherwatch.views.SquareImageView
+            android:id="@+id/forecast_title_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/card_padding"
+            android:text="@string/time_now"
+            android:id="@+id/forecast_time_display"
+            android:textSize="@dimen/abc_text_size_headline_material"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.schneenet.android.weatherwatch.views.SquareImageView
+            android:id="@+id/forecast_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:scaleType="fitXY"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/forecast_conditions"
+                android:text="@string/default_na"
+                android:textSize="@dimen/abc_text_size_large_material"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/forecast_temperature_high"
+                    android:text="@string/default_temp"
+                    android:textSize="@dimen/abc_text_size_display_2_material"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:id="@+id/forecast_temperature_low"
+                    android:text="@string/default_temp"
+                    android:textSize="@dimen/abc_text_size_display_1_material"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

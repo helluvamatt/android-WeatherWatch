@@ -36,7 +36,8 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 
 	private static final String KEY_MODE = "com.schneenet.android.weatherwatch.WeatherFragment.KEY_MODE";
 	public static final int MODE_TODAY = 0;
-	public static final int MODE_FORECAST = 1;
+	public static final int MODE_HOURLY_FORECAST = 1;
+	public static final int MODE_DAILY_FORECAST = 2;
 
 	private SwipeRefreshLayout mSwipeRefreshLayout;
 	private WeatherAdapter mWeatherAdapter;
@@ -58,6 +59,7 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 		SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(mWeatherAdapter);
 		animationAdapter.setAbsListView(cardsListView);
 		cardsListView.setAdapter(animationAdapter);
+		cardsListView.setOnItemClickListener(mWeatherAdapter);
 		return v;
 	}
 
@@ -122,9 +124,11 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 	@Override
 	public void onUpdate()
 	{
-		if (mServiceBound)
+		if (mServiceBound && mWeatherAdapter != null)
 		{
 			mWeatherAdapter.setTempUnit(mServiceInterface.getTempUnit());
+			mWeatherAdapter.setWindSpeedUnit(mServiceInterface.getWindSpeedUnit());
+			mWeatherAdapter.setPressureUnit(mServiceInterface.getPressureUnit());
 			if (!mServiceInterface.hasApiKey())
 			{
 				mWeatherAdapter.removeAll();
@@ -134,12 +138,13 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 			{
 				switch (mMode)
 				{
-					case MODE_FORECAST:
+					case MODE_DAILY_FORECAST:
 						DailyForecast dailyForecast = mServiceInterface.getCachedDailyForecast();
 						if (dailyForecast != null)
 						{
+							int count = dailyForecast.getForecastCount();
 							int i;
-							for (i = 0; i < dailyForecast.getForecastCount(); i++)
+							for (i = 0; i < count; i++)
 							{
 								mWeatherAdapter.setData(i, WeatherAdapter.CardType.DAILY_FORECAST, dailyForecast.getForecastInstance(i));
 							}
@@ -149,6 +154,27 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 							}
 						}
 						else if (mServiceInterface.hasLastErrorDailyForecast())
+						{
+							mWeatherAdapter.removeAll();
+							mWeatherAdapter.setData(0, WeatherAdapter.CardType.MESSAGE, MessageModel.from(getActivity()).withText(R.string.error_network).build());
+						}
+						break;
+					case MODE_HOURLY_FORECAST:
+						HourlyForecast hourlyForecast = mServiceInterface.getCachedHourlyForecast();
+						if (hourlyForecast != null)
+						{
+							int count = hourlyForecast.getForecastCount();
+							int i;
+							for (i = 0; i < count; i++)
+							{
+								mWeatherAdapter.setData(i, WeatherAdapter.CardType.HOURLY_FORECAST, hourlyForecast.getForecastInstance(i));
+							}
+							for (; i < mWeatherAdapter.getCount(); i++)
+							{
+								mWeatherAdapter.remove(i);
+							}
+						}
+						else if (mServiceInterface.hasLastErrorHourlyForecase())
 						{
 							mWeatherAdapter.removeAll();
 							mWeatherAdapter.setData(0, WeatherAdapter.CardType.MESSAGE, MessageModel.from(getActivity()).withText(R.string.error_network).build());
@@ -165,33 +191,10 @@ public class WeatherFragment extends Fragment implements InformationService.Upda
 						{
 							mWeatherAdapter.setData(0, WeatherAdapter.CardType.MESSAGE, MessageModel.from(getActivity()).withText(R.string.error_network).build());
 						}
-
-						HourlyForecast hourlyForecast = mServiceInterface.getCachedHourlyForecast();
-						if (hourlyForecast != null)
-						{
-							int count = hourlyForecast.getForecastCount();
-							int i;
-							for (i = 0; i < count; i++)
-							{
-								mWeatherAdapter.setData(i + 1, WeatherAdapter.CardType.HOURLY_FORECAST, hourlyForecast.getForecastInstance(i));
-							}
-							for (; i < mWeatherAdapter.getCount() - 1; i++)
-							{
-								mWeatherAdapter.remove(i + 1);
-							}
-						}
-						else if (mServiceInterface.hasLastErrorHourlyForecase())
-						{
-							for (int i = 1; i < mWeatherAdapter.getCount(); i++)
-							{
-								mWeatherAdapter.remove(i);
-							}
-						}
-
-						mSwipeRefreshLayout.setRefreshing(false);
 						break;
 				}
 			}
+			mSwipeRefreshLayout.setRefreshing(false);
 		}
 	}
 
