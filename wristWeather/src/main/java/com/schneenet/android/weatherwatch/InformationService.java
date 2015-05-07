@@ -179,7 +179,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 				// Send cached data to pebble
 				PebbleDictionary dict = new PebbleDictionary();
 				dict.addString(KEY_WEATHER_CITY, mCachedWeather.getCityName());
-				dict.addString(KEY_WEATHER_CONDITIONS, mCachedWeather.getWeatherInstance(0).getWeatherDescription());
+				dict.addString(KEY_WEATHER_CONDITIONS, mCachedWeather.getWeatherInstance(0).getWeatherName());
 				dict.addString(KEY_WEATHER_TEMPERATURE, getTemperatureString(this, mTempUnit, mCachedWeather.getMainInstance().getTemperature()));
 				dict.addInt8(KEY_WEATHER_ICON, (byte) icon.getCharacter());
 				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
