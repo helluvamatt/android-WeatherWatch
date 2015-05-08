@@ -2,6 +2,7 @@ package com.schneenet.android.weatherwatch.icons;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.util.Log;
 
 import com.mikepenz.iconics.typeface.IIcon;
 import com.mikepenz.iconics.typeface.ITypeface;
@@ -119,6 +120,7 @@ public class WeatherWatchIcons implements ITypeface
 			}
 			catch (Exception e)
 			{
+				Log.e("WeatherWatchIcons", "Failed to load font asset: fonts/" + TTF_FILE, e);
 				return null;
 			}
 		}
