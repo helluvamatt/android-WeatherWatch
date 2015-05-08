@@ -17,7 +17,6 @@ android {
 }
 
 dependencies {
-    //compile 'com.android.support:support-v4:22.1.1'
     compile 'com.android.support:support-v13:22.1.1'
     compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.getpebble:pebblekit:2.6.0'
@@ -25,10 +24,7 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:22.1.1'
     compile 'com.mikepenz.materialdrawer:library:2.9.2@aar'
     compile 'com.mikepenz.iconics:library:0.7.9@aar'
-    compile 'com.mikepenz.iconics:meteocons-typeface:1.1.1@aar'
     compile 'net.aksingh:owm-japis:2.5.0.3'
     compile 'com.nhaarman.listviewanimations:lib-core:3.1.0@aar'
-    //compile 'com.nhaarman.listviewanimations:lib-manipulation:3.1.0@aar'
-    //compile 'com.nhaarman.listviewanimations:lib-core-slh:3.1.0@aar'
     compile 'com.nineoldandroids:library:2.4.0'
 }

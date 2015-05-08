@@ -19,7 +19,8 @@ import android.util.Log;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver;
 import com.getpebble.android.kit.util.PebbleDictionary;
-import com.mikepenz.meteocons_typeface_library.Meteoconcs;
+//import com.mikepenz.meteocons_typeface_library.Meteoconcs;
+import com.schneenet.android.weatherwatch.icons.WeatherWatchIcons;
 import com.schneenet.android.weatherwatch.utils.WeatherUtils;
 
 import net.aksingh.owmjapis.CurrentWeather;
@@ -108,6 +109,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
+		mSendToPebble = PebbleKit.isWatchConnected(this);
 		configureService();
 		mBinder.refreshWeather();
 		return START_STICKY;
@@ -131,13 +133,18 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	{
 		// Pull settings from SharedPreferences
 		String tempunitKey = getString(R.string.prefs_tempunit_key);
+		String speedunitKey = getString(R.string.prefs_speedunit_key);
+		String pressureunitKey = getString(R.string.prefs_pressureunit_key);
 		String updatefreqKey = getString(R.string.prefs_updatefreq_key);
 		String apikeyKey = getString(R.string.prefs_apikey_key);
 		String locationsourceKey = getString(R.string.prefs_locationsource_key);
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		mTempUnit = Integer.parseInt(prefs.getString(tempunitKey, Integer.toString(PREF_TEMPUNIT_F)));
 		mDelay = Long.parseLong(prefs.getString(updatefreqKey, "30"));
+		mWindSpeedUnit = Integer.parseInt(prefs.getString(speedunitKey, Integer.toString(PREF_SPEEDUNIT_MPH)));
+		mPressureUnit = Integer.parseInt(prefs.getString(pressureunitKey, Integer.toString(PREF_PRESSUREUNIT_INHG)));
 		mApiKey = prefs.getString(apikeyKey, null);
+
 		int locationProvider = Integer.parseInt(prefs.getString(locationsourceKey, Integer.toString(PREF_LOCATIONSOURCE_AUTO)));
 
 		// Make sure defaults are set in the preferences
@@ -166,15 +173,15 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 
 	private void sendPebbleUpdate()
 	{
-		Log.i(getClass().getSimpleName(), "sendCachedUpdate() called...");
-		if (mCachedWeather != null)
+		if (mSendToPebble)
 		{
-			if (mSendToPebble)
+			Log.i(getClass().getSimpleName(), "sendPebbleUpdate() called...");
+			if (mCachedWeather != null)
 			{
 				// Process icon image
 				String iconName = mCachedWeather.getWeatherInstance(0).getWeatherIconName();
 				int weatherCode = mCachedWeather.getWeatherInstance(0).getWeatherCode();
-				Meteoconcs.Icon icon = getIconForOWMCode(weatherCode, iconName.endsWith("d"));
+				WeatherWatchIcons.Icon icon = getIconForOWMCode(weatherCode, iconName.endsWith("d"));
 
 				// Send cached data to pebble
 				PebbleDictionary dict = new PebbleDictionary();
@@ -184,25 +191,25 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 				dict.addInt8(KEY_WEATHER_ICON, (byte) icon.getCharacter());
 				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
 			}
-		}
-		else if (mLastError_CurrentWeather != null)
-		{
-			PebbleDictionary dict = new PebbleDictionary();
-			dict.addString(KEY_WEATHER_CITY, "");
-			dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.error_check_app));
-			dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
-			dict.addInt8(KEY_WEATHER_ICON, (byte) Meteoconcs.Icon.met_na.getCharacter());
-			PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
-		}
-		else
-		{
-			// Send "Loading..." data to pebble
-			PebbleDictionary dict = new PebbleDictionary();
-			dict.addString(KEY_WEATHER_CITY, "");
-			dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.loading));
-			dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
-			dict.addInt8(KEY_WEATHER_ICON, (byte) Meteoconcs.Icon.met_na.getCharacter());
-			PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+			else if (mLastError_CurrentWeather != null)
+			{
+				PebbleDictionary dict = new PebbleDictionary();
+				dict.addString(KEY_WEATHER_CITY, "");
+				dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.error_check_app));
+				dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
+				dict.addInt8(KEY_WEATHER_ICON, (byte) WeatherWatchIcons.Icon.wwi_na.getCharacter());
+				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+			}
+			else
+			{
+				// Send "Loading..." data to pebble
+				PebbleDictionary dict = new PebbleDictionary();
+				dict.addString(KEY_WEATHER_CITY, "");
+				dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.loading));
+				dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
+				dict.addInt8(KEY_WEATHER_ICON, (byte) WeatherWatchIcons.Icon.wwi_na.getCharacter());
+				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+			}
 		}
 	}
 
@@ -245,12 +252,14 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		@Override
 		public void receiveData(final Context context, final int transactionId, final PebbleDictionary data)
 		{
-			// Handle message
+			// Debug logging
 			Log.d(getClass().getSimpleName(), "Received message: " + data.toJsonString());
-			sendPebbleUpdate();
 
 			// Send ack back to Pebble
-			PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
+			PebbleKit.sendAckToPebble(context, transactionId);
+
+			// Handle message
+			sendPebbleUpdate();
 		}
 	};
 
@@ -398,7 +407,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		}
 	}
 
-	public static Meteoconcs.Icon getIconForOWMCode(int weatherCode, boolean isDay)
+	public static WeatherWatchIcons.Icon getIconForOWMCode(int weatherCode, boolean isDay)
 	{
 		switch (weatherCode)
 		{
@@ -407,16 +416,19 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			case 202:
 			case 210:
 			case 211:
-			case 212:
 			case 221:
 			case 230:
 			case 231:
 			case 232:
+				// Storm
+				return WeatherWatchIcons.Icon.wwi_storm;
+			case 212:
 			case 900:
 			case 901:
 			case 902:
-				// Storm
-				return Meteoconcs.Icon.met_clouds_flash;
+			case 906:
+				// Heavy Storm
+				return WeatherWatchIcons.Icon.wwi_heavy_storm;
 			case 300:
 			case 301:
 			case 302:
@@ -427,7 +439,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			case 314:
 			case 321:
 				// Drizzle
-				return Meteoconcs.Icon.met_drizzle;
+				return WeatherWatchIcons.Icon.wwi_light_rain;
 			case 500:
 			case 501:
 			case 502:
@@ -438,27 +450,27 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			case 522:
 			case 531:
 				// Rain
-				return Meteoconcs.Icon.met_rain;
+				return WeatherWatchIcons.Icon.wwi_rain;
 			case 511:
 			case 611:
 			case 612:
 				// Sleet
-				// TODO Sleet (for now, fall down to snow)
+				return WeatherWatchIcons.Icon.wwi_hail_sleet;
 			case 600:
-			case 601:
 			case 615:
-			case 616:
 			case 620:
+				// Light snow / flurries
+				return WeatherWatchIcons.Icon.wwi_light_snow;
+			case 601:
+			case 616:
 			case 621:
 				// Snow
-				return Meteoconcs.Icon.met_snow;
+				return WeatherWatchIcons.Icon.wwi_snow;
 			case 602:
 			case 622:
 				// Heavy snow
-				return Meteoconcs.Icon.met_snow_heavy;
+				return WeatherWatchIcons.Icon.wwi_heavy_snow;
 			case 701:
-				// Mist
-				return Meteoconcs.Icon.met_mist;
 			case 711:
 			case 721:
 			case 731:
@@ -469,24 +481,24 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			case 771:
 			case 781:
 				// Fog
-				return Meteoconcs.Icon.met_fog;
+				return WeatherWatchIcons.Icon.wwi_fog;
 			case 800:
 				// Clear / sunny
-				return isDay ? Meteoconcs.Icon.met_sun : Meteoconcs.Icon.met_moon;
+				return isDay ? WeatherWatchIcons.Icon.wwi_clear_day : WeatherWatchIcons.Icon.wwi_clear_night;
 			case 801:
 			case 802:
 			case 803:
 				// Partly cloudy
-				return isDay ? Meteoconcs.Icon.met_cloud_sun : Meteoconcs.Icon.met_cloud_moon;
+				return isDay ? WeatherWatchIcons.Icon.wwi_partly_cloudy_day : WeatherWatchIcons.Icon.wwi_partly_cloudy_night;
 			case 804:
 				// Cloudy
-				return Meteoconcs.Icon.met_clouds;
+				return WeatherWatchIcons.Icon.wwi_mostly_cloudy;
 			case 903:
 				// Cold
-				return Meteoconcs.Icon.met_snowflake;
+				return WeatherWatchIcons.Icon.wwi_cold;
 			case 904:
 				// Hot
-				return Meteoconcs.Icon.met_temperature;
+				return WeatherWatchIcons.Icon.wwi_hot;
 			case 905:
 			case 951:
 			case 952:
@@ -501,12 +513,9 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			case 961:
 			case 962:
 				// Wind
-				return Meteoconcs.Icon.met_wind;
-			case 906:
-				// Hail
-				return Meteoconcs.Icon.met_hail;
+				return WeatherWatchIcons.Icon.wwi_wind;
 			default:
-				return Meteoconcs.Icon.met_na;
+				return WeatherWatchIcons.Icon.wwi_na;
 		}
 	}
 

@@ -14,9 +14,9 @@ import android.widget.TextView;
 import com.mikepenz.iconics.Iconics;
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.iconics.typeface.FontAwesome;
-import com.mikepenz.meteocons_typeface_library.Meteoconcs;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.ValueAnimator;
+import com.schneenet.android.weatherwatch.icons.WeatherWatchIcons;
 import com.schneenet.android.weatherwatch.models.MessageModel;
 import com.schneenet.android.weatherwatch.utils.WeatherUtils;
 import com.schneenet.android.weatherwatch.views.anim.BaseAnimatorListener;
@@ -226,7 +226,7 @@ public class WeatherAdapter extends BaseAdapter implements ListView.OnItemClickL
 		}
 	}
 
-	public static Meteoconcs.Icon getWeatherIcon(AbstractWeather.Weather weather)
+	public static WeatherWatchIcons.Icon getWeatherIcon(AbstractWeather.Weather weather)
 	{
 		String iconName = weather.getWeatherIconName();
 		int weatherCode = weather.getWeatherCode();
@@ -235,10 +235,10 @@ public class WeatherAdapter extends BaseAdapter implements ListView.OnItemClickL
 
 	public static IconicsDrawable getWeatherIconDrawable(Context ctxt, String iconName)
 	{
-		return getWeatherIconDrawable(ctxt, Meteoconcs.Icon.valueOf(iconName));
+		return getWeatherIconDrawable(ctxt, WeatherWatchIcons.Icon.valueOf(iconName));
 	}
 
-	public static IconicsDrawable getWeatherIconDrawable(Context ctxt, Meteoconcs.Icon icon)
+	public static IconicsDrawable getWeatherIconDrawable(Context ctxt, WeatherWatchIcons.Icon icon)
 	{
 		return new IconicsDrawable(ctxt, icon).colorRes(R.color.primary);
 	}
