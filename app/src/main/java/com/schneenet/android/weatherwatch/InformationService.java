@@ -19,7 +19,6 @@ import android.util.Log;
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver;
 import com.getpebble.android.kit.util.PebbleDictionary;
-//import com.mikepenz.meteocons_typeface_library.Meteoconcs;
 import com.schneenet.android.weatherwatch.icons.WeatherWatchIcons;
 import com.schneenet.android.weatherwatch.utils.WeatherUtils;
 
@@ -169,6 +168,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			provider = LocationManager.GPS_PROVIDER;
 		}
 		locationService.requestLocationUpdates(provider, MIN_LOCATION_TIME, 0, mLocationListener);
+		sendPebbleUpdate();
 	}
 
 	private void sendPebbleUpdate()
@@ -176,40 +176,43 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		if (mSendToPebble)
 		{
 			Log.i(getClass().getSimpleName(), "sendPebbleUpdate() called...");
+			String cityName;
+			String conditions = "";
+			String temperature = "";
+			WeatherWatchIcons.Icon icon;
+
 			if (mCachedWeather != null)
 			{
 				// Process icon image
 				String iconName = mCachedWeather.getWeatherInstance(0).getWeatherIconName();
 				int weatherCode = mCachedWeather.getWeatherInstance(0).getWeatherCode();
-				WeatherWatchIcons.Icon icon = getIconForOWMCode(weatherCode, iconName.endsWith("d"));
+				icon = getIconForOWMCode(weatherCode, iconName.endsWith("d"));
 
-				// Send cached data to pebble
-				PebbleDictionary dict = new PebbleDictionary();
-				dict.addString(KEY_WEATHER_CITY, mCachedWeather.getCityName());
-				dict.addString(KEY_WEATHER_CONDITIONS, mCachedWeather.getWeatherInstance(0).getWeatherName());
-				dict.addString(KEY_WEATHER_TEMPERATURE, getTemperatureString(this, mTempUnit, mCachedWeather.getMainInstance().getTemperature()));
-				dict.addInt8(KEY_WEATHER_ICON, (byte) icon.getCharacter());
-				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+				// Send cached weather to Pebble
+				cityName = mCachedWeather.getCityName();
+				conditions = mCachedWeather.getWeatherInstance(0).getWeatherName();
+				temperature =  getTemperatureString(this, mTempUnit, mCachedWeather.getMainInstance().getTemperature());
 			}
 			else if (mLastError_CurrentWeather != null)
 			{
-				PebbleDictionary dict = new PebbleDictionary();
-				dict.addString(KEY_WEATHER_CITY, "");
-				dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.error_check_app));
-				dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
-				dict.addInt8(KEY_WEATHER_ICON, (byte) WeatherWatchIcons.Icon.wwi_na.getCharacter());
-				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+				// Send error condition to Pebble
+				cityName = getString(R.string.error_check_app);
+				icon = WeatherWatchIcons.Icon.wwi_na;
 			}
 			else
 			{
-				// Send "Loading..." data to pebble
-				PebbleDictionary dict = new PebbleDictionary();
-				dict.addString(KEY_WEATHER_CITY, "");
-				dict.addString(KEY_WEATHER_CONDITIONS, getString(R.string.loading));
-				dict.addString(KEY_WEATHER_TEMPERATURE, getString(R.string.default_na));
-				dict.addInt8(KEY_WEATHER_ICON, (byte) WeatherWatchIcons.Icon.wwi_na.getCharacter());
-				PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+				// Send "Loading..." data to Pebble
+				cityName = getString(R.string.loading);
+				icon = WeatherWatchIcons.Icon.wwi_refresh;
 			}
+
+			PebbleDictionary dict = new PebbleDictionary();
+			dict.addString(KEY_WEATHER_CITY, cityName);
+			dict.addString(KEY_WEATHER_CONDITIONS, conditions);
+			dict.addString(KEY_WEATHER_TEMPERATURE, temperature);
+			dict.addInt8(KEY_WEATHER_ICON, (byte) icon.getCharacter());
+			PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
+			Log.i("InformationService", String.format("Sent icon: '%c' (%h)", icon.getCharacter(), (byte) icon.getCharacter()));
 		}
 	}
 
