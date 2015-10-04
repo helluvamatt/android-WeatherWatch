@@ -3,6 +3,8 @@
 
     <string name="app_name">WeatherWatch</string>
 
+	<string name="prefs_lastupdate_key">service.lastupdate</string>
+
     <string name="prefs_default_summary">Not Set</string>
     <string name="prefs_cat_weather_title">Weather</string>
     <string name="prefs_cat_weather_units_title">Weather Units</string>
@@ -82,13 +84,18 @@
         <item>Auto</item>
         <item>Network</item>
         <item>GPS</item>
+        <item>Manual</item>
     </string-array>
 
     <string-array name="prefs_locationsource_values">
         <item>0</item>
         <item>1</item>
         <item>2</item>
+        <item>-1</item>
     </string-array>
+
+	<string name="prefs_manuallocation_key" translatable="false">weather.manuallocation</string>
+	<string name="prefs_manuallocatoin_title">Custom Location</string>
 
     <string name="str_degrees_k">%.0f °K</string>
     <string name="str_degrees_c">%.0f °C</string>
@@ -147,5 +154,6 @@
     </string-array>
 
     <string name="daily_forecast_date_format">EEEE, MMM d</string>
+	<string name="my_analog_name">My Analog</string>
 
 </resources>

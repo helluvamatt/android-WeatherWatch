@@ -40,5 +40,10 @@
             android:entries="@array/prefs_locationsource_displayValues"
             android:entryValues="@array/prefs_locationsource_values"
             android:dialogTitle="@string/prefs_locationsource_title"/>
+        <EditTextPreference
+            android:key="@string/prefs_manuallocation_key"
+            android:title="@string/prefs_manuallocatoin_title"
+            android:summary="@string/prefs_default_summary"
+            android:dialogTitle="@string/prefs_manuallocatoin_title" />
     </PreferenceCategory>
 </PreferenceScreen>

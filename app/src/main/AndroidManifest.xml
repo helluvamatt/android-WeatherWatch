@@ -1,42 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:versionCode="1"
-	android:versionName="1.0"
-	package="com.schneenet.android.weatherwatch">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.schneenet.android.weatherwatch"
+    android:versionCode="1"
+    android:versionName="1.0" >
 
-	<uses-sdk
-		android:minSdkVersion="19"
-		android:targetSdkVersion="22" />
+    <uses-sdk
+        android:minSdkVersion="21"
+        android:targetSdkVersion="23" />
 
-	<uses-permission android:name="android.permission.INTERNET" />
-	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<application
-		android:allowBackup="true"
-		android:icon="@mipmap/ic_launcher"
-		android:label="@string/app_name"
-		android:theme="@style/Theme.AppTheme"
-		android:name=".WeatherWatchApplication">
-		<service
-			android:enabled="true"
-			android:name=".InformationService" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-		<receiver android:name=".StartupReceiver">
-			<intent-filter>
-				<action android:name="android.intent.action.BOOT_COMPLETED" />
-			</intent-filter>
-		</receiver>
+    <uses-feature android:name="android.hardware.type.watch" /> <!-- Required to act as a custom watch face. -->
+    <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-		<activity
-			android:label="@string/app_name"
-			android:name=".MainActivity">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
+    <android:uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-	</application>
+    <application
+        android:name=".WeatherWatchApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AppTheme" >
+        <service
+            android:name=".InformationService"
+            android:enabled="true" />
+
+        <receiver android:name=".StartupReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".WeatherWatchFace"
+            android:label="@string/my_analog_name"
+            android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview"
+                android:resource="@drawable/preview_analog" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview_circular"
+                android:resource="@drawable/preview_analog" />
+
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+    </application>
+
 </manifest>

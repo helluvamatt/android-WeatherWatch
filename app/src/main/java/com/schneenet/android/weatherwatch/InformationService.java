@@ -1,5 +1,7 @@
 package com.schneenet.android.weatherwatch;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,10 +11,12 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -29,6 +33,9 @@ import net.aksingh.owmjapis.OpenWeatherMap;
 
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -56,15 +63,17 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	private static final int PREF_PRESSUREUNIT_MMHG = 1;
 	private static final int PREF_PRESSUREUNIT_HPA = 2;
 
+	private static final int PREF_LOCATIONSOURCE_NONE = -1;
 	private static final int PREF_LOCATIONSOURCE_AUTO = 0;
 	//private static final int PREF_LOCATIONSOURCE_NETWORK = 1;
 	private static final int PREF_LOCATIONSOURCE_GPS = 2;
 
-	private static final long MIN_LOCATION_TIME = 300000; // 5 minutes 
+	private static final long MIN_LOCATION_TIME = 300000; // 5 minutes
 
 	// Status
-	private ScheduledThreadPoolExecutor mTimerExecutor;
-	private ScheduledFuture<?> mUpdateTask;
+	private ExecutorService mExecutor;
+	private Future<?> mUpdateTask;
+
 	private Handler mHandler = new Handler();
 	private boolean mSendToPebble;
 	private Throwable mLastError_CurrentWeather;
@@ -87,6 +96,8 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	// Cached location
 	private final Object mCachedLocationLockObject = new Object();
 	private Location mCachedLocation;
+	private boolean mUsingLocation;
+	private String mCustomLocation;
 
 	// Binding
 	private final ServiceBinder mBinder = new ServiceBinder();
@@ -102,7 +113,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		PebbleKit.registerReceivedDataHandler(this, mPebbleDataReceiver);
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).registerOnSharedPreferenceChangeListener(this);
 
-		mTimerExecutor = new ScheduledThreadPoolExecutor(1);
+		mExecutor = Executors.newSingleThreadExecutor();
 	}
 
 	@Override
@@ -111,7 +122,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		mSendToPebble = PebbleKit.isWatchConnected(this);
 		configureService();
 		mBinder.refreshWeather();
-		return START_STICKY;
+		return START_NOT_STICKY;
 	}
 
 	@Override
@@ -119,7 +130,16 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	{
 		super.onDestroy();
 		LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-		locationService.removeUpdates(mLocationListener);
+		if (mUsingLocation)
+		{
+			try
+			{
+				locationService.removeUpdates(mLocationListener);
+			} catch (SecurityException se)
+			{
+				// Ignore
+			}
+		}
 	}
 
 	@Override
@@ -161,21 +181,38 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		}
 
 		// Register for location updates
-		LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
-		String provider = LocationManager.NETWORK_PROVIDER;
-		if (locationProvider == PREF_LOCATIONSOURCE_GPS || (locationProvider == PREF_LOCATIONSOURCE_AUTO && !locationService.isProviderEnabled(LocationManager.NETWORK_PROVIDER)))
+		if (locationProvider != PREF_LOCATIONSOURCE_NONE)
 		{
-			provider = LocationManager.GPS_PROVIDER;
+			mUsingLocation = true;
+			LocationManager locationService = (LocationManager) getSystemService(LOCATION_SERVICE);
+			String provider = LocationManager.NETWORK_PROVIDER;
+			if (locationProvider == PREF_LOCATIONSOURCE_GPS || (locationProvider == PREF_LOCATIONSOURCE_AUTO && !locationService.isProviderEnabled(LocationManager.NETWORK_PROVIDER)))
+			{
+				provider = LocationManager.GPS_PROVIDER;
+			}
+			try
+			{
+				locationService.requestLocationUpdates(provider, MIN_LOCATION_TIME, 0, mLocationListener);
+			}
+			catch (SecurityException se)
+			{
+				Log.w(TAG, "Location permission rejected by user.", se);
+				return;
+			}
 		}
-		locationService.requestLocationUpdates(provider, MIN_LOCATION_TIME, 0, mLocationListener);
-		sendPebbleUpdate();
+		else
+		{
+			mCustomLocation = prefs.getString(getString(R.string.prefs_manuallocation_key), "");
+			mUsingLocation = false;
+		}
+		sendWatchUpdate();
 	}
 
-	private void sendPebbleUpdate()
+	private void sendWatchUpdate()
 	{
+		Log.i(getClass().getSimpleName(), "sendWatchUpdate() called...");
 		if (mSendToPebble)
 		{
-			Log.i(getClass().getSimpleName(), "sendPebbleUpdate() called...");
 			String cityName;
 			String conditions = "";
 			String temperature = "";
@@ -212,8 +249,9 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			dict.addString(KEY_WEATHER_TEMPERATURE, temperature);
 			dict.addInt8(KEY_WEATHER_ICON, (byte) icon.getCharacter());
 			PebbleKit.sendDataToPebble(this, PEBBLE_APP_UUID, dict);
-			Log.i("InformationService", String.format("Sent icon: '%c' (%h)", icon.getCharacter(), (byte) icon.getCharacter()));
+			Log.i(TAG, String.format("Sent icon: '%c' (%h)", icon.getCharacter(), (byte) icon.getCharacter()));
 		}
+		// TODO Send update to Android Wear
 	}
 
 	private void sendUpdate()
@@ -231,13 +269,22 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		}
 	}
 
+	private void scheduleNextUpdate()
+	{
+		// Set an alarm for the next update
+		Intent serviceStartIntent = new Intent(getApplicationContext(), InformationService.class);
+		PendingIntent pendingIntent = PendingIntent.getService(this, 0, serviceStartIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + mDelay, pendingIntent);
+	}
+
 	private BroadcastReceiver mPebbleConnectedReceiver = new BroadcastReceiver()
 	{
 		@Override
 		public void onReceive(Context context, Intent intent)
 		{
 			mSendToPebble = true;
-			sendPebbleUpdate();
+			sendWatchUpdate();
 		}
 	};
 
@@ -262,7 +309,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			PebbleKit.sendAckToPebble(context, transactionId);
 
 			// Handle message
-			sendPebbleUpdate();
+			sendWatchUpdate();
 		}
 	};
 
@@ -298,7 +345,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		}
 	};
 
-	private Runnable mLoadWeatherCommand = new Runnable()
+	private Runnable mLoadWeatherJob = new Runnable()
 	{
 		@Override
 		public void run()
@@ -313,7 +360,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			{
 				if (mCachedLocation == null)
 				{
-					Log.w(getClass().getSimpleName(), "Don't yet have location.");
+					Log.w(TAG, "Don't yet have location.");
 					return;
 				}
 			}
@@ -325,7 +372,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			Log.i(TAG, "Loading current conditions...");
 			try
 			{
-				CurrentWeather cwd = owm.currentWeatherByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude());
+				CurrentWeather cwd = mUsingLocation ? owm.currentWeatherByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude()) : owm.currentWeatherByCityName(mCustomLocation);
 				if (cwd.isValid())
 				{
 					mCachedWeather = cwd;
@@ -347,7 +394,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			Log.i(TAG, "Loading hourly forecast...");
 			try
 			{
-				HourlyForecast hourlyForecast = owm.hourlyForecastByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude());
+				HourlyForecast hourlyForecast = mUsingLocation ? owm.hourlyForecastByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude()) : owm.hourlyForecastByCityName(mCustomLocation);
 				if (hourlyForecast.isValid())
 				{
 					mCachedHourlyForecast = hourlyForecast;
@@ -369,7 +416,7 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 			Log.i(TAG, "Loading daily forecast...");
 			try
 			{
-				DailyForecast dailyForecast = owm.dailyForecastByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude(), mForecastDays);
+				DailyForecast dailyForecast = mUsingLocation ? owm.dailyForecastByCoordinates((float) mCachedLocation.getLatitude(), (float) mCachedLocation.getLongitude(), mForecastDays) : owm.dailyForecastByCityName(mCustomLocation, mForecastDays);
 				if (dailyForecast.isValid())
 				{
 					mCachedDailyForecast = dailyForecast;
@@ -387,8 +434,9 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 				mLastError_DailyForecast = ex;
 			}
 
+			sendWatchUpdate();
 			sendUpdate();
-			sendPebbleUpdate();
+			scheduleNextUpdate();
 
 			Log.i(TAG, "Done with update");
 		}
@@ -398,15 +446,10 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{
 		String updatefreqKey = getString(R.string.prefs_updatefreq_key);
-		if (key.equals(updatefreqKey) && mUpdateTask != null)
-		{
-			// Cancel pending weather updates
-			mUpdateTask.cancel(false);
-		}
 		configureService();
 		if (key.equals(updatefreqKey))
 		{
-			mBinder.refreshWeather();
+			scheduleNextUpdate();
 		}
 	}
 
@@ -597,8 +640,12 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 		public void refreshWeather()
 		{
 			Log.i(getClass().getSimpleName(), "refreshWeather() called...");
-			// Schedule weather updates with given delay
-			mUpdateTask = mTimerExecutor.scheduleWithFixedDelay(mLoadWeatherCommand, 0, mDelay, TimeUnit.MINUTES);
+
+			if (mUpdateTask == null || mUpdateTask.isDone())
+			{
+				// Execute the update on a worker thread
+				mUpdateTask = mExecutor.submit(mLoadWeatherJob);
+			}
 		}
 
 		public void addUpdateHandler(UpdateHandler handler)
@@ -679,6 +726,6 @@ public class InformationService extends Service implements OnSharedPreferenceCha
 
 	public interface UpdateHandler
 	{
-		public void onUpdate();
+		void onUpdate();
 	}
 }
