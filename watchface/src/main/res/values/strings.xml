@@ -1,0 +1,4 @@
+<resources>
+	<string name="app_name">WeatherWatch</string>
+	<string name="watchface_name">WeatherWatch Watch Face</string>
+</resources>
